@@ -1,0 +1,11 @@
+Tests:
+ - LogReader tests with multiple histograms
+ - All LogWriter tests
+
+LogWriter:
+ - Implement
+
+Future:
+ - Use more standard marshalling/unmarshalling
+   scheme. Protobufs maybe? Explore options
+
