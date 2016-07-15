@@ -26,22 +26,5 @@ object Main {
 				counts.map({ case (v, c) => ans.println("%d,%d".format(v, c)) })
 			}}
 		)
-		/*
-		val r = new Recorder(3)
-		r.recordValue(100)
-		r.recordValue(1000)
-		r.recordValue(235)
-		r.recordValue(10000)
-
-		val h = r.getIntervalHistogram()
-		val w = new HistogramLogWriter("../single_hist.log")
-		w.outputIntervalHistogram(h)
-		val golden = new PrintStream("../single_hist.ans")
-		golden.println(4)
-		golden.println("%d,%d".format(100, 1))
-		golden.println("%d,%d".format(1000, 1))
-		golden.println("%d,%d".format(235, 1))
-		golden.println("%d,%d".format(10000, 1))
-		*/
 	}
 }
