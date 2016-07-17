@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 )
 
 func verifyLogReader(t *testing.T, testi int, test string) {
@@ -70,4 +71,78 @@ func TestLogReader(t *testing.T) {
 	for i, test := range tests {
 		verifyLogReader(t, i, test)
 	}
+}
+
+func TestLogReaderMetadata(t *testing.T) {
+	f, err := os.Open("testdata/tstamp.log")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	defer f.Close()
+	r := NewLogReader(f)
+	if !r.Scan() {
+		t.Errorf("want hist, got error: %v", r.Err())
+		return
+	}
+	h := r.Hist()
+	if r.Scan() {
+		t.Errorf("did not want second hist, got: %v", r.Hist())
+		return
+	}
+	if err := r.Err(); err != nil {
+		t.Errorf("unexpected error: %v", err)
+		return
+	}
+	if c := h.TotalCount(); c != 3 {
+		t.Errorf("total count: want 3, got %d", c)
+		return
+	}
+	if st, ok := h.StartTime(); ok {
+		want := unixMillisToTime(15000)
+		if !fuzzyEqual(st, want) {
+			t.Errorf("start time: want %v, got %v", want, st)
+		}
+	} else {
+		t.Error("want start time")
+	}
+	if et, ok := h.EndTime(); ok {
+		want := unixMillisToTime(16003)
+		if !fuzzyEqual(et, want) {
+			t.Errorf("end time: want %v, got %v", want, et)
+		}
+	} else {
+		t.Errorf("want end time")
+	}
+	if c := h.Val(100).Count; c != 1 {
+		t.Errorf("count at 100: want 1, got %d", c)
+	}
+	if c := h.Val(10).Count; c != 1 {
+		t.Errorf("count at 10: want 1, got %d", c)
+	}
+	if c := h.Val(44444).Count; c != 1 {
+		t.Errorf("count at 44444: want 1, got %d", c)
+	}
+}
+
+func unixMillisToTime(t int64) time.Time {
+	sec := t / 1e3
+	nano := (t % 1e3) * 1e6
+	return time.Unix(sec, nano)
+}
+
+// fuzzyEqual compares to times, allowing them to
+// differ by up to 1 μs.
+//
+// We need to use it because fractions of a second
+// are stored as floats in the log.
+func fuzzyEqual(t1, t2 time.Time) bool {
+	if t1.Unix() != t2.Unix() {
+		return false
+	}
+	delta := t1.Nanosecond() - t2.Nanosecond()
+	if delta < 0 {
+		delta = -delta
+	}
+	return delta < 1e3
 }

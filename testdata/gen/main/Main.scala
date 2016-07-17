@@ -6,6 +6,7 @@ object Main {
   def main(args: Array[String]): Unit = {
     genReader()
     genWriter()
+    genTimestamp()
   }
 
   def genReader(): Unit = {
@@ -75,6 +76,30 @@ object Main {
         ins.close()
       }
     })
+  }
+
+  def genTimestamp(): Unit = {
+    val StartTime = 123L
+    val BaseTime = 14124L
+
+    val HistStart = 15000L
+    val HistEnd = 16003L
+
+    val r = new Recorder(3);
+    val w = new HistogramLogWriter("../tstamp.log")
+    List(100, 10, 44444).map(r.recordValue(_))
+
+    val h = r.getIntervalHistogram()
+    h.setStartTimeStamp(HistStart)
+    h.setEndTimeStamp(HistEnd)
+
+    w.outputStartTime(StartTime)
+    w.setBaseTime(BaseTime)
+    w.outputBaseTime(BaseTime)
+    w.outputComment("this should be ignored")
+    w.outputLogFormatVersion()
+    w.outputLegend()
+    w.outputIntervalHistogram(h)
   }
 }
 

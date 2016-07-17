@@ -54,6 +54,7 @@ func NewLogReader(r io.Reader) *LogReader {
 }
 
 func getFloat64Prefix(s string) (float64, error) {
+	s = strings.TrimSpace(s)
 	hasPeriod := false
 	end := len(s)
 	for i := 0; i < len(s); i++ {
@@ -62,6 +63,7 @@ func getFloat64Prefix(s string) (float64, error) {
 		}
 		if s[i] == '.' && !hasPeriod {
 			hasPeriod = true
+			continue
 		}
 		end = i
 		break
@@ -97,8 +99,8 @@ func (l *LogReader) Scan() bool {
 			l.baseTime.nano = int64(nano * 1e9)
 			l.foundBaseTime = true
 			continue
-		case strings.HasPrefix(s, "\"StartTimestamp\""):
-			// skip legend
+		case strings.HasPrefix(s, "\"StartTimestamp\""), strings.HasPrefix(s, "#"):
+			// skip legend and comments
 			continue
 		}
 
