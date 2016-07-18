@@ -58,6 +58,15 @@ type buckets struct {
 	leadZeroCountBase int32
 }
 
+func (h *Hist) clone() *Hist {
+	var h2 Hist
+	h2 = *h
+	c := make([]int64, len(h2.b.counts))
+	copy(c, h2.b.counts)
+	h2.b.counts = c
+	return &h2
+}
+
 type HistVal struct {
 	Value      int64
 	Count      int64

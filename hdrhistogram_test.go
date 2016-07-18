@@ -3,7 +3,12 @@
 
 package hdrhist
 
-import "testing"
+import (
+	"reflect"
+	"testing"
+
+	"github.com/pkg/errors"
+)
 
 func configPanics(cfg Config) (panicked bool) {
 	defer func() {
@@ -512,4 +517,74 @@ func TestGTHdrHistogramScaledMedianEquivalentValue(t *testing.T) {
 			t.Errorf("medianEquiv(%d) want %d got %d", test.v, test.want, eq)
 		}
 	}
+}
+
+func TestGTHdrHistogramIntervalRecording(t *testing.T) {
+	cfg := Config{
+		LowestDiscernible: 1,
+		HighestTrackable:  3600 * 1e6,
+		SigFigs:           3,
+		AutoResize:        false,
+	}
+	h := WithConfig(cfg)
+	r1 := NewRecorderWithConfig(cfg)
+	r2 := NewRecorderWithConfig(cfg)
+
+	for i := int64(0); i < 10e3; i++ {
+		h.Record(3000 * i)
+		r1.Record(3000 * i)
+		r2.Record(3000 * i)
+	}
+	h2 := r1.IntervalHist(nil)
+	if err := sameHistsNoTime(h, h2); err != nil {
+		t.Errorf("h and r1.IntervalHist() differ: %v", err)
+	}
+	h2 = r2.IntervalHist(h2)
+	if err := sameHistsNoTime(h, h2); err != nil {
+		t.Errorf("h and r2.IntervalHist() differ: %v", err)
+	}
+
+	for i := int64(0); i < 5000; i++ {
+		h.Record(3000 * i)
+		r1.Record(3000 * i)
+		r2.Record(3000 * i)
+	}
+	h3 := r1.IntervalHist(nil)
+	sumHist := h2.clone()
+	sumHist.Add(h3)
+	if err := sameHistsNoTime(h, sumHist); err != nil {
+		t.Errorf("h and sumHist differ: %v", err)
+	}
+	_ = r2.IntervalHist(nil)
+
+	for i := int64(5000); i < 10000; i++ {
+		h.Record(3000 * i)
+		r1.Record(3000 * i)
+		r2.Record(3000 * i)
+	}
+	h4 := r1.IntervalHist(nil)
+	h4.Add(h3)
+	if err := sameHistsNoTime(h4, h2); err != nil {
+		t.Errorf("h2 and h4 differ: %v", err)
+	}
+	h5 := r2.IntervalHist(h4)
+	h5.Add(h3)
+	if err := sameHistsNoTime(h2, h5); err != nil {
+		t.Errorf("h2 and h5 differ: %v", err)
+	}
+}
+
+// sameHistsNoTime checks whether h1 and h2 have the same
+// contents ignoring start/end times.
+func sameHistsNoTime(h1, h2 *Hist) error {
+	if h1.totalCount != h2.totalCount {
+		return errors.Errorf("total counts don't match: %d vs %d", h1.totalCount, h2.totalCount)
+	}
+	if h1.cfg != h2.cfg {
+		return errors.New("configs don't match")
+	}
+	if !reflect.DeepEqual(h1.b, h2.b) {
+		return errors.New("buckets don't match")
+	}
+	return nil
 }
