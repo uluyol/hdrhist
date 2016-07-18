@@ -132,7 +132,7 @@ func (h *Hist) resize(highest int64) {
 
 	h.b.counts = counts
 	h.b.bucketCount = bucketCount
-	h.cfg.HighestTrackable = highest
+	h.cfg.HighestTrackable = h.b.highestEquiv(h.b.valueFor(countsLen - 1))
 }
 
 func numBucketsToCoverVal(v int64, subCount, unitMag int32) int32 {
@@ -335,11 +335,6 @@ func (h *Hist) EstMemSize() int {
 	return histSize + cap(h.b.counts)*8
 }
 
-func (h *Hist) EstByteSize() int {
-	panic("not implemented")
-	return -1
-}
-
 func (h *Hist) Max() int64 { return h.PercentileVal(100).Value }
 func (h *Hist) Min() int64 { return h.PercentileVal(0).Value }
 
@@ -424,7 +419,6 @@ func (h *Hist) RecordN(v, count int64) {
 	i := h.b.countsIndex(v)
 	if i > len(h.b.counts) && h.cfg.AutoResize {
 		h.resize(v)
-		h.cfg.HighestTrackable = h.b.highestEquiv(v)
 	}
 	if 0 > i || i > len(h.b.counts) {
 		panic("value to large")
