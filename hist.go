@@ -58,7 +58,10 @@ type buckets struct {
 	leadZeroCountBase int32
 }
 
-func (h *Hist) clone() *Hist {
+// Clone returns a deep copy of the histogram. This
+// is useful when combining or taking differences of
+// histograms.
+func (h *Hist) Clone() *Hist {
 	var h2 Hist
 	h2 = *h
 	c := make([]int64, len(h2.b.counts))

@@ -550,7 +550,7 @@ func TestGTHdrHistogramIntervalRecording(t *testing.T) {
 		r2.Record(3000 * i)
 	}
 	h3 := r1.IntervalHist(nil)
-	sumHist := h2.clone()
+	sumHist := h2.Clone()
 	sumHist.Add(h3)
 	if err := sameHistsNoTime(h, sumHist); err != nil {
 		t.Errorf("h and sumHist differ: %v", err)
