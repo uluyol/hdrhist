@@ -180,6 +180,9 @@ func wordByteCountFromCookie(cookie int32) int {
 // decodeIntSize decodes the integer of the provided size
 // as a big-endian number and returns it.
 func decodeIntSize(buf []byte, size int) (int64, error) {
+	if size < 0 || 8 < size {
+		return 0, errors.New("invalid size")
+	}
 	if len(buf) < size {
 		return 0, errors.Errorf("got %d bytes, need %d", len(buf), size)
 	}
@@ -197,7 +200,7 @@ func decodeIntSize(buf []byte, size int) (int64, error) {
 	default:
 		var res int64
 		for i := 0; i < size; i++ {
-			shift := uint(size-i) * 8
+			shift := uint(size-i-1) * 8
 			res |= int64(buf[i]) << shift
 		}
 		return res, nil
