@@ -117,11 +117,7 @@ func decode(h *Hist, headerBuf, buf []byte) error {
 		return errors.New("buffer does not contain full payload")
 	}
 
-	if cookie & ^0xf0 == encodingV1CookieBase {
-		return errors.New("v1 encoding not supported")
-	}
-
-	_, err := fillCountsFromBuf(h, buf, int(payloadLen))
+	_, err := fillCountsFromBuf(h, buf, int(payloadLen), cookie)
 	if err != nil {
 		return err
 	}
@@ -129,23 +125,39 @@ func decode(h *Hist, headerBuf, buf []byte) error {
 	return nil
 }
 
-func fillCountsFromBuf(h *Hist, buf []byte, payloadLen int) (int, error) {
+func fillCountsFromBuf(h *Hist, buf []byte, payloadLen int, cookie int32) (int, error) {
 	desti := 0
 	pos := 0
+	wordSize := wordByteCountFromCookie(cookie)
 	for pos < payloadLen {
-		count, clen, err := decodeZigZag(buf[pos:])
-		pos += clen
-		if err != nil {
-			return 0, errors.Wrap(err, "invalid count")
-		}
 		var zerosCount int32
-		if count < 0 {
-			zc := -count
-			if zc > math.MaxInt32 {
-				return 0, errors.New("got zero count > math.MaxInt32")
+		var count int64
+
+		switch {
+		case wordSize < 0:
+			var clen int
+			var err error
+			count, clen, err = decodeZigZag(buf[pos:])
+			pos += clen
+			if err != nil {
+				return 0, errors.Wrap(err, "invalid count")
 			}
-			zerosCount = int32(zc)
+			if count < 0 {
+				zc := -count
+				if zc > math.MaxInt32 {
+					return 0, errors.New("got zero count > math.MaxInt32")
+				}
+				zerosCount = int32(zc)
+			}
+		default:
+			var err error
+			count, err = decodeIntSize(buf[pos:], wordSize)
+			if err != nil {
+				return 0, errors.Wrap(err, "counts not written correctly")
+			}
+			pos += wordSize
 		}
+
 		if zerosCount > 0 {
 			desti += int(zerosCount)
 		} else {
@@ -155,4 +167,39 @@ func fillCountsFromBuf(h *Hist, buf []byte, payloadLen int) (int, error) {
 		}
 	}
 	return desti, nil
+}
+
+func wordByteCountFromCookie(cookie int32) int {
+	if cookie & ^0xf0 == encodingV2CookieBase {
+		return -1
+	}
+	t := int(cookie&0xf0) >> 4
+	return t & 0xe
+}
+
+// decodeIntSize decodes the integer of the provided size
+// as a big-endian number and returns it.
+func decodeIntSize(buf []byte, size int) (int64, error) {
+	if len(buf) < size {
+		return 0, errors.Errorf("got %d bytes, need %d", len(buf), size)
+	}
+	switch size {
+	case 2:
+		return int64(buf[0])<<8 | int64(buf[1]), nil
+	case 4:
+		return int64(buf[0])<<24 | int64(buf[1])<<16 |
+			int64(buf[2])<<8 | int64(buf[3]), nil
+	case 8:
+		return int64(buf[0])<<56 | int64(buf[1])<<48 |
+			int64(buf[2])<<40 | int64(buf[3])<<32 |
+			int64(buf[4])<<24 | int64(buf[5])<<16 |
+			int64(buf[6])<<8 | int64(buf[7]), nil
+	default:
+		var res int64
+		for i := 0; i < size; i++ {
+			shift := uint(size-i) * 8
+			res |= int64(buf[i]) << shift
+		}
+		return res, nil
+	}
 }

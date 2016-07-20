@@ -81,6 +81,18 @@ func TestLogReader(t *testing.T) {
 	}
 }
 
+func TestLogReaderV1(t *testing.T) {
+	tests := []string{
+		"v1_single",
+		"v1_single_repeated",
+		"v1_single_repeated_multi",
+	}
+
+	for i, test := range tests {
+		verifyLogReader(t, i, test)
+	}
+}
+
 func TestLogReaderMetadata(t *testing.T) {
 	f, err := os.Open("testdata/tstamp.log")
 	if err != nil {
