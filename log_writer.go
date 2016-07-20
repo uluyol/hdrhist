@@ -10,8 +10,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-const WritingLogFormatVersion = "1.3"
-
 type LogWriter struct {
 	w        io.Writer
 	buf      bytes.Buffer
