@@ -90,3 +90,30 @@ func TestHistValCumCount(t *testing.T) {
 		}
 	}
 }
+
+func TestValOOB(t *testing.T) {
+	h := WithConfig(Config{
+		LowestDiscernible: 1,
+		HighestTrackable:  1e9,
+		SigFigs:           2,
+	})
+
+	h.Record(1)
+	h.Record(1e4)
+	h.Record(1e9)
+
+	tests := []struct {
+		v    int64
+		want HistVal
+	}{
+		{0, HistVal{}},
+		{-1, HistVal{Value: -1}},
+		{1e11, HistVal{Value: 1e11, Count: 0, CumCount: 3, Percentile: 100}},
+	}
+
+	for _, test := range tests {
+		if v := h.Val(test.v); v != test.want {
+			t.Errorf("val %d: want %#v got %#v", test.v, test.want, v)
+		}
+	}
+}

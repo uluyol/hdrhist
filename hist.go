@@ -326,8 +326,15 @@ func (h *Hist) AllVals() []HistVal {
 
 func (h *Hist) Val(v int64) HistVal {
 	i := h.b.countsIndex(v)
+	if v < 0 || i < 0 {
+		return HistVal{Value: v}
+	}
 	if i >= len(h.b.counts) {
-		i = len(h.b.counts) - 1
+		return HistVal{
+			Value:      v,
+			CumCount:   h.TotalCount(),
+			Percentile: 100,
+		}
 	}
 	var count int64
 	for j := 0; j <= i; j++ {
