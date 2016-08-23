@@ -64,3 +64,29 @@ func TestAlwaysMeetsSigFigs(t *testing.T) {
 		}
 	}
 }
+
+func TestHistValCumCount(t *testing.T) {
+	h := WithConfig(Config{
+		LowestDiscernible: 1,
+		HighestTrackable:  1e9,
+		SigFigs:           3,
+	})
+
+	h.Record(1)
+	h.Record(1e4)
+	h.Record(1e9)
+
+	tests := []struct {
+		v  int64
+		cc int64
+	}{
+		{1, 1},
+		{1e4, 2},
+		{1e10, 3},
+	}
+	for _, test := range tests {
+		if cc := h.Val(test.v).CumCount; cc != test.cc {
+			t.Errorf("val %d: bad cumulative count, want %d got %d", test.v, test.cc, cc)
+		}
+	}
+}

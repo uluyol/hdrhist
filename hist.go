@@ -73,6 +73,7 @@ func (h *Hist) Clone() *Hist {
 type HistVal struct {
 	Value      int64
 	Count      int64
+	CumCount   int64
 	Percentile float64
 }
 
@@ -316,6 +317,7 @@ func (h *Hist) AllVals() []HistVal {
 		vals = append(vals, HistVal{
 			Value:      v,
 			Count:      count,
+			CumCount:   total,
 			Percentile: 100 * float64(total) / float64(h.totalCount),
 		})
 	}
@@ -324,6 +326,9 @@ func (h *Hist) AllVals() []HistVal {
 
 func (h *Hist) Val(v int64) HistVal {
 	i := h.b.countsIndex(v)
+	if i >= len(h.b.counts) {
+		i = len(h.b.counts) - 1
+	}
 	var count int64
 	for j := 0; j <= i; j++ {
 		count += h.b.counts[j]
@@ -335,6 +340,7 @@ func (h *Hist) Val(v int64) HistVal {
 	return HistVal{
 		Value:      h.b.highestEquiv(v),
 		Count:      h.b.counts[i],
+		CumCount:   count,
 		Percentile: percentile,
 	}
 }
@@ -395,6 +401,7 @@ func (h *Hist) PercentileVal(p float64) HistVal {
 			return HistVal{
 				Value:      v,
 				Count:      count,
+				CumCount:   total,
 				Percentile: percentile,
 			}
 		}
@@ -402,6 +409,7 @@ func (h *Hist) PercentileVal(p float64) HistVal {
 	return HistVal{
 		Value:      0,
 		Count:      0,
+		CumCount:   0,
 		Percentile: 0,
 	}
 }
