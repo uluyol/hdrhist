@@ -346,9 +346,9 @@ func (h *Hist) Val(v int64) HistVal {
 }
 
 // EstMemSize estimates the number of bytes being consumed by
-// the histogram. It is a conservative (over) estimate, but it
-// ignores any memory usage used up by the start time and end
-// time.
+// the histogram. It ignores any memory usage caused by the
+// start time and end time. The resulting size should not be
+// assumed to be exact. The return value is in bytes.
 func (h *Hist) EstMemSize() int {
 	return histSize + cap(h.b.counts)*8
 }
