@@ -163,19 +163,19 @@ func numBucketsToCoverVal(v int64, subCount, unitMag int32) int32 {
 }
 
 func (b *buckets) countsIndex(v int64) int {
-	bi := b.bucketIndex(v)
-	sbi := b.subBucketIndex(v, bi)
+	bi := bucketIndex(v, b.subMask, b.leadZeroCountBase)
+	sbi := subBucketIndex(v, bi, b.unitMag)
 	base := (bi + 1) << uint(b.subHalfCountMag)
 	offset := sbi - int(b.subHalfCount)
 	return base + offset
 }
 
-func (b *buckets) bucketIndex(v int64) int {
-	return int(b.leadZeroCountBase) - leadingZeros(uint64(v|b.subMask))
+func bucketIndex(v, subMask int64, leadZeroCountBase int32) int {
+	return int(leadZeroCountBase) - leadingZeros(uint64(v|subMask))
 }
 
-func (b *buckets) subBucketIndex(v int64, bi int) int {
-	return int(uint64(v) >> uint(bi+int(b.unitMag)))
+func subBucketIndex(v int64, bi int, unitMag int32) int {
+	return int(uint64(v) >> uint(bi+int(unitMag)))
 }
 
 func (b *buckets) valueFor(i int) int64 {
@@ -189,8 +189,8 @@ func (b *buckets) valueFor(i int) int64 {
 }
 
 func (b *buckets) sizeOfEquivalentValueRange(v int64) int64 {
-	bi := b.bucketIndex(v)
-	sbi := b.subBucketIndex(v, bi)
+	bi := bucketIndex(v, b.subMask, b.leadZeroCountBase)
+	sbi := subBucketIndex(v, bi, b.unitMag)
 	t := bi
 	if sbi >= int(b.subCount) {
 		bi++
@@ -200,8 +200,8 @@ func (b *buckets) sizeOfEquivalentValueRange(v int64) int64 {
 }
 
 func (b *buckets) lowestEquiv(v int64) int64 {
-	bi := b.bucketIndex(v)
-	sbi := b.subBucketIndex(v, bi)
+	bi := bucketIndex(v, b.subMask, b.leadZeroCountBase)
+	sbi := subBucketIndex(v, bi, b.unitMag)
 	return int64(sbi) << uint64(bi+int(b.unitMag))
 }
 
