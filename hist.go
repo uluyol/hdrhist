@@ -337,8 +337,9 @@ func (h *Hist) Val(v int64) HistVal {
 		}
 	}
 	var count int64
-	for j := 0; j <= i; j++ {
-		count += h.b.counts[j]
+	cs := h.b.counts[:i+1]
+	for _, c :=  range cs {
+		count += c
 	}
 	percentile := 100 * float64(count) / float64(h.totalCount)
 	if h.totalCount == 0 {
