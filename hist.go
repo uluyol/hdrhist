@@ -10,25 +10,24 @@ import (
 type Config struct {
 	_ struct{}
 
-	// LowestDiscernible is the lowest value that
-	// can be discerned from 0. Must be positive.
-	// This number may be rounded down to the
-	// nearest power of 2.
+	// LowestDiscernible is the lowest, positive value
+	// that can be discerned from 0.
+	// This number may be rounded down to the nearest power of 2.
 	LowestDiscernible int64
 
-	// HighestTrackable is the largest value that can
-	// be tracked by the histogram. This must be at
-	// least twice the value of LowestDiscernible.
+	// HighestTrackable is the largest value
+	// that can be tracked by the histogram.
+	// This must be at least twice the value of LowestDiscernible.
 	HighestTrackable int64
 
 	// SigFigs are the number of significant figures
-	// that will be maintained by the histogram. Must
-	// be ∈ [0,5].
+	// that will be maintained by the histogram.
+	// Must be ∈ [0,5].
 	SigFigs int32
 
-	// AutoResize will adjust HighestTrackable and
-	// resize the histogram if necessary. Note that
-	// resizing the histogram requires allocation
+	// AutoResize will adjust HighestTrackable
+	// and resize the histogram if necessary.
+	// Note that resizing the histogram requires allocation
 	// and will take longer than a typical operation.
 	AutoResize bool
 }
@@ -58,9 +57,9 @@ type buckets struct {
 	leadZeroCountBase int32
 }
 
-// Clone returns a deep copy of the histogram. This
-// is useful when combining or taking differences of
-// histograms.
+// Clone returns a deep copy of the histogram.
+// This is useful when combining or taking
+// differences of histograms.
 func (h *Hist) Clone() *Hist {
 	var h2 Hist
 	h2 = *h
@@ -77,9 +76,9 @@ type HistVal struct {
 	Percentile float64
 }
 
-// New creates a new Hist that auto-resizes and has
-// a LowestDiscernible value of 1. Valid values for
-// sigfigs are between 0 and 5.
+// New creates a new Hist that auto-resizes
+// and has a LowestDiscernible value of 1.
+// Valid values for sigfigs are between 0 and 5.
 func New(sigfigs int32) *Hist {
 	return WithConfig(Config{
 		LowestDiscernible: 1,
@@ -89,8 +88,7 @@ func New(sigfigs int32) *Hist {
 	})
 }
 
-// WithConfig creates a new Hist with the provided
-// Config.
+// WithConfig creates a new Hist with the provided Config.
 func WithConfig(cfg Config) *Hist {
 	var h Hist
 	h.Init(cfg)
@@ -338,7 +336,7 @@ func (h *Hist) Val(v int64) HistVal {
 	}
 	var count int64
 	cs := h.b.counts[:i+1]
-	for _, c :=  range cs {
+	for _, c := range cs {
 		count += c
 	}
 	percentile := 100 * float64(count) / float64(h.totalCount)
@@ -353,12 +351,11 @@ func (h *Hist) Val(v int64) HistVal {
 	}
 }
 
-// EstMemSize estimates the number of bytes being consumed by
-// the histogram. It ignores any memory usage caused by the
-// start time and end time. The resulting size should not be
-// assumed to be exact. The return value is in bytes.
+// EstMemSize estimates the number of bytes being consumed by the histogram.
+// The resulting size should not be assumed to be exact.
+// The return value is in bytes.
 func (h *Hist) EstMemSize() int {
-	return histSize + cap(h.b.counts)*8
+	return histSize + 2*timeSize + cap(h.b.counts)*8
 }
 
 func (h *Hist) Max() int64 { return h.PercentileVal(100).Value }

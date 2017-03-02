@@ -8,9 +8,9 @@ package hdrhist
 // is not imported in any of the other files.
 
 import (
+	"reflect"
 	"time"
-	"unsafe"
 )
 
-var histSize = int(unsafe.Sizeof(Hist{}))
-var timeSize = int(unsafe.Sizeof(time.Time{}) + unsafe.Sizeof(time.Location{}))
+var histSize = int(reflect.TypeOf(Hist{}).Size())
+var timeSize = int(reflect.TypeOf(time.Time{}).Size() + reflect.TypeOf(time.Location{}).Size())
