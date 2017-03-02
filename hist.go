@@ -3,6 +3,8 @@ package hdrhist
 import (
 	"math"
 	"time"
+
+	"github.com/uluyol/hdrhist/internal/bits"
 )
 
 // Config contains the options that can be used to
@@ -169,7 +171,7 @@ func (b *buckets) countsIndex(v int64) int {
 }
 
 func bucketIndex(v, subMask int64, leadZeroCountBase int32) int {
-	return int(leadZeroCountBase) - leadingZeros(uint64(v|subMask))
+	return int(leadZeroCountBase) - bits.LeadingZeros64(uint64(v|subMask))
 }
 
 func subBucketIndex(v int64, bi int, unitMag int32) int {
@@ -213,35 +215,6 @@ func (b *buckets) highestEquiv(v int64) int64 {
 
 func (b *buckets) areEquiv(v1, v2 int64) bool {
 	return b.lowestEquiv(v1) == b.lowestEquiv(v2)
-}
-
-func leadingZeros(x uint64) int {
-	n := 64
-	if y := x >> 32; y != 0 {
-		n -= 32
-		x = y
-	}
-	if y := x >> 16; y != 0 {
-		n -= 16
-		x = y
-	}
-	if y := x >> 8; y != 0 {
-		n -= 8
-		x = y
-	}
-	if y := x >> 4; y != 0 {
-		n -= 4
-		x = y
-	}
-	if y := x >> 2; y != 0 {
-		n -= 2
-		x = y
-	}
-	if y := x >> 1; y != 0 {
-		n -= 1
-		x = y
-	}
-	return n - int(x)
 }
 
 func (h *Hist) Add(o *Hist) {
