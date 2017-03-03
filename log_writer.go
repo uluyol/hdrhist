@@ -69,7 +69,7 @@ func (l *LogWriter) WriteIntervalHist(h *Hist) error {
 			d := t.Sub(b)
 			t = time.Unix(int64(d/time.Second), int64(d%time.Second))
 			d = e.Sub(b)
-			t = time.Unix(int64(d/time.Second), int64(d%time.Second))
+			e = time.Unix(int64(d/time.Second), int64(d%time.Second))
 		}
 	}
 	return l.writeHist(h, t, e)
@@ -81,7 +81,7 @@ func (l *LogWriter) writeHist(h *Hist, start time.Time, end time.Time) error {
 	max := h.Max()
 	fmt.Fprintf(&l.buf, "%.3f,%.3f,%.3f,",
 		float64(start.Unix())+(float64(start.Nanosecond()/1e6)/1e3),
-		float64(end.Sub(start)/1e6)/1e3,
+		float64(end.Sub(start)/time.Millisecond)/1e3,
 		float64(max)/MaxValueUnitRatio)
 	b64w := base64.NewEncoder(base64.StdEncoding, &l.buf)
 	encodeCompressed(h, b64w, max) // not writing to disk yet, won't fail
