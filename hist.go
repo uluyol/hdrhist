@@ -415,10 +415,10 @@ func (h *Hist) Record(v int64) { h.RecordN(v, 1) }
 
 func (h *Hist) RecordN(v, count int64) {
 	i := h.b.countsIndex(v)
-	if i > len(h.b.counts) && h.cfg.AutoResize {
+	if i >= len(h.b.counts) && h.cfg.AutoResize {
 		h.resize(v)
 	}
-	if 0 > i || i > len(h.b.counts) {
+	if 0 > i || i >= len(h.b.counts) {
 		panic("value to large")
 	}
 	h.b.counts[i] += count
