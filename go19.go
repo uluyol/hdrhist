@@ -5,6 +5,6 @@ package hdrhist
 
 import "math/bits"
 
-func clz64(v int64) int {
-	return bits.LeadingZeros(v)
+func clz64(v uint64) int {
+	return bits.LeadingZeros64(v)
 }
