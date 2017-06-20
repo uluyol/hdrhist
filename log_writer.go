@@ -10,6 +10,23 @@ import (
 	"github.com/pkg/errors"
 )
 
+// A LogWriter writes Hist's to a log file.
+//
+//     · A log file may optionally have a start time.
+//     · A log file may optionally have a base time,
+//       which will be used to reduce the space consumption of timestamps.
+//     · A log file may have comments interleaved with histograms.
+//
+// Typical usage of a LogWriter would be as follows:
+//     now := time.Now()
+//     lw := NewLogWriter(w)
+//     lw.WriteStartTime(now)
+//     lw.SetBaseTime(now)
+//     lw.WriteLegend()
+//
+// LogWriter is unfortunately difficult to use and was taken
+// almost directly from the Java pacakge.
+// This API should be revisited.
 type LogWriter struct {
 	w        io.Writer
 	buf      bytes.Buffer

@@ -30,6 +30,9 @@ func splitLog(data []byte, atEOF bool) (advance int, token []byte, err error) {
 	return 0, nil, nil
 }
 
+// LogReader reads hists from a log file.
+//
+// LogReader currently provides no mechanism for extracting comments, or start times.
 type LogReader struct {
 	s   *bufio.Scanner
 	err error

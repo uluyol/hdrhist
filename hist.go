@@ -32,6 +32,9 @@ type Config struct {
 	AutoResize bool
 }
 
+// Hist maintains a distribution of values with a predetermined level of precision.
+// A Hist can distinguish values with a predetermined range,
+// or optionally resize to handle large values as they are provided.
 type Hist struct {
 	b          buckets
 	cfg        Config
@@ -354,6 +357,8 @@ func (h *Hist) Stdev() float64 {
 
 func (h *Hist) TotalCount() int64 { return h.totalCount }
 
+// PercentileVal returns the HistVal at the requested percentile p.
+// p should be in the range [0, 100].
 func (h *Hist) PercentileVal(p float64) HistVal {
 	p = math.Min(p, 100)
 	desiredCount := int64((p/100)*float64(h.totalCount) + 0.5)
@@ -442,6 +447,7 @@ func (h *Hist) Clear() {
 	h.endTime = nil
 }
 
+// Recorder provides a recording-only convenience API for snapshotting Hists.
 type Recorder struct {
 	h Hist
 }
